@@ -6,22 +6,14 @@ import mongoose from "mongoose";
 export async function POST(req) {
   const body = await req.json();
 
-  // ✅ MercadoPago puede mandar type, topic o action
-  if (
-    body.type !== "payment" &&
-    body.topic !== "payment" &&
-    !body.action?.startsWith("payment")
-  ) {
+  // 1️⃣ Ignorar eventos que no sean payment
+  if (body.type !== "payment") {
     return Response.json({ ok: true });
   }
 
-  const paymentId = body.data?.id;
-  if (!paymentId) {
-    console.error("❌ Webhook sin paymentId", body);
-    return Response.json({ ok: false });
-  }
+  const paymentId = body.data.id;
 
-  // 1️⃣ Consultar pago real en MP
+  // 2️⃣ Consultar pago real en MP
   const mpRes = await fetch(
     `https://api.mercadopago.com/v1/payments/${paymentId}`,
     {
@@ -31,50 +23,52 @@ export async function POST(req) {
     },
   );
 
+  if (!mpRes.ok) {
+    const err = await mpRes.text();
+    console.error("MP error:", err);
+    return Response.json({ ok: false });
+  }
+
   const payment = await mpRes.json();
 
-  // 2️⃣ Solo pagos aprobados
+  // 3️⃣ Validar estado aprobado
   if (payment.status !== "approved") {
     return Response.json({ ok: true });
   }
 
-  // 3️⃣ Leer terrenos desde external_reference
-  if (!payment.external_reference) {
-    console.error("❌ external_reference vacío", payment);
-    return Response.json({ ok: false });
-  }
-
-  let siteIds = [];
+  // 4️⃣ Parsear external_reference
+  let siteIdsRaw;
   try {
-    siteIds = JSON.parse(payment.external_reference);
+    siteIdsRaw = JSON.parse(payment.external_reference);
   } catch (e) {
-    console.error("❌ external_reference inválido", payment.external_reference);
+    console.error("external_reference inválido:", payment.external_reference);
     return Response.json({ ok: false });
   }
 
-  console.log("✅ Pago aprobado:", {
+  // 5️⃣ Convertir a ObjectId
+  const siteIds = siteIdsRaw.map((id) => new mongoose.Types.ObjectId(id));
+
+  console.log("✔ Pagado:", {
     paymentId: payment.id,
-    siteIds,
+    sites: siteIdsRaw,
   });
 
   await connectDB();
 
-  // ✅ convertir a ObjectId
-  const objectIds = siteIds.map((id) => new mongoose.Types.ObjectId(id));
-
-  // 4️⃣ Marcar terrenos como vendidos
+  // 6️⃣ Actualizar Mongo
   const result = await Site.updateMany(
-    { _id: { $in: objectIds } },
+    { _id: { $in: siteIds } },
     {
       $set: {
         status: "sold",
         paid: true,
         paymentId: payment.id,
+        paidAt: new Date(),
       },
     },
   );
 
-  console.log("🧾 Terrenos actualizados:", result.modifiedCount);
+  console.log("Mongo update:", result);
 
   return Response.json({ ok: true });
 }
