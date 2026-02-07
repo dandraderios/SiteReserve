@@ -48,6 +48,16 @@ const SiteSchema = new mongoose.Schema(
       default: "available",
     },
 
+    paid: {
+      type: Boolean,
+      default: false,
+    },
+
+    paymentId: {
+      type: String,
+      default: null,
+    },
+
     x: Number,
     y: Number,
     w: Number,

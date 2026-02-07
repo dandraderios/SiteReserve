@@ -39,6 +39,12 @@ export async function POST(req) {
     return Response.json({ ok: false });
   }
 
+  console.log("MP payment:", {
+    id: payment.id,
+    status: payment.status,
+    external_reference: payment.external_reference,
+  });
+
   await connectDB();
 
   // 4️⃣ Marcar terrenos como vendidos
@@ -46,7 +52,7 @@ export async function POST(req) {
     { _id: { $in: siteIds } },
     {
       $set: {
-        status: "reserved",
+        status: "sold",
         paid: true,
         paymentId: payment.id,
       },
