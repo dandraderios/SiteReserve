@@ -1,6 +1,6 @@
 // app/api/webhook/route.js
-import { connectDB } from "@/lib/mongodb";
-import Site from "@/models/Site";
+import { connectDB } from "../../../lib/mongodb";
+import Site from "../../../models/Site";
 
 export async function POST(req) {
   const body = await req.json();
