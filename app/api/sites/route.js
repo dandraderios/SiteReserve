@@ -1,4 +1,6 @@
 // app/api/sites/route.js
+export const dynamic = "force-dynamic";
+
 import { connectDB } from "../../../lib/mongodb";
 import Site from "../../../models/Site";
 
