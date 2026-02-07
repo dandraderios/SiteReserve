@@ -63,7 +63,6 @@ export async function POST(req) {
         status: "sold",
         paid: true,
         paymentId: payment.id,
-        paidAt: new Date(),
       },
     },
   );
