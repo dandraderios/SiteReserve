@@ -1,18 +1,27 @@
 // app/api/webhook/route.js
 import { connectDB } from "../../../lib/mongodb";
 import Site from "../../../models/Site";
+import mongoose from "mongoose";
 
 export async function POST(req) {
   const body = await req.json();
 
-  // MercadoPago envía muchos eventos
-  if (body.type !== "payment") {
+  // ✅ MercadoPago puede mandar type, topic o action
+  if (
+    body.type !== "payment" &&
+    body.topic !== "payment" &&
+    !body.action?.startsWith("payment")
+  ) {
     return Response.json({ ok: true });
   }
 
-  const paymentId = body.data.id;
+  const paymentId = body.data?.id;
+  if (!paymentId) {
+    console.error("❌ Webhook sin paymentId", body);
+    return Response.json({ ok: false });
+  }
 
-  // 1️⃣ Consultar el pago REAL
+  // 1️⃣ Consultar pago real en MP
   const mpRes = await fetch(
     `https://api.mercadopago.com/v1/payments/${paymentId}`,
     {
@@ -24,32 +33,38 @@ export async function POST(req) {
 
   const payment = await mpRes.json();
 
-  // 2️⃣ Validar estado
+  // 2️⃣ Solo pagos aprobados
   if (payment.status !== "approved") {
     return Response.json({ ok: true });
   }
 
   // 3️⃣ Leer terrenos desde external_reference
-  // (esto lo mandas tú al crear el pago)
+  if (!payment.external_reference) {
+    console.error("❌ external_reference vacío", payment);
+    return Response.json({ ok: false });
+  }
+
   let siteIds = [];
   try {
     siteIds = JSON.parse(payment.external_reference);
   } catch (e) {
-    console.error("external_reference inválido");
+    console.error("❌ external_reference inválido", payment.external_reference);
     return Response.json({ ok: false });
   }
 
-  console.log("MP payment:", {
-    id: payment.id,
-    status: payment.status,
-    external_reference: payment.external_reference,
+  console.log("✅ Pago aprobado:", {
+    paymentId: payment.id,
+    siteIds,
   });
 
   await connectDB();
 
+  // ✅ convertir a ObjectId
+  const objectIds = siteIds.map((id) => new mongoose.Types.ObjectId(id));
+
   // 4️⃣ Marcar terrenos como vendidos
-  await Site.updateMany(
-    { _id: { $in: siteIds } },
+  const result = await Site.updateMany(
+    { _id: { $in: objectIds } },
     {
       $set: {
         status: "sold",
@@ -58,6 +73,8 @@ export async function POST(req) {
       },
     },
   );
+
+  console.log("🧾 Terrenos actualizados:", result.modifiedCount);
 
   return Response.json({ ok: true });
 }
