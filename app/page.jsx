@@ -14,7 +14,7 @@ export default function Home() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    fetch("/api/sites")
+    fetch("/api/sites", { cache: "no-store" })
       .then((r) => r.json())
       .then(setSites);
   }, []);
