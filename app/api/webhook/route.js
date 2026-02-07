@@ -3,8 +3,14 @@ import { connectDB } from "../../../lib/mongodb";
 import Site from "../../../models/Site";
 import mongoose from "mongoose";
 
+console.log("Webhook endpoint hit");
+
 export async function POST(req) {
+  console.log("Processing webhook POST...");
+
   const body = await req.json();
+
+  console.log("Webhook body:", body);
 
   // 1️⃣ Ignorar eventos que no sean payment
   if (body.type !== "payment") {
