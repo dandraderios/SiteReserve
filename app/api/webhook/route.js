@@ -52,7 +52,9 @@ export async function POST(req) {
   }
 
   // 5️⃣ Convertir a ObjectId
-  const siteIds = siteIdsRaw.map((id) => new mongoose.Types.ObjectId(id));
+  const siteIds = siteIdsRaw.map((id) =>
+    mongoose.Types.ObjectId.createFromHexString(id),
+  );
 
   console.log("✔ Pagado:", {
     paymentId: payment.id,
