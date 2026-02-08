@@ -44,6 +44,7 @@ export async function POST(req) {
         pending: `${BASE_URL}/pending`,
       },
       auto_return: "approved",
+      notification_url: `${BASE_URL}/api/webhook`,
     };
 
     console.log("MP preference:", pref);
