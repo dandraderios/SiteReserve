@@ -42,6 +42,11 @@ export async function POST(req) {
     return Response.json({ ok: true });
   }
 
+  // 3️⃣ Obtener fecha REAL de pago
+  const paidAt = payment.date_approved
+    ? new Date(payment.date_approved)
+    : new Date();
+
   // 4️⃣ Parsear external_reference
   let siteIdsRaw;
   try {
@@ -71,6 +76,7 @@ export async function POST(req) {
         status: "sold",
         paid: true,
         paymentId: payment.id,
+        paidAt,
       },
     },
   );

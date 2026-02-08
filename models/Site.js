@@ -58,6 +58,8 @@ const SiteSchema = new mongoose.Schema(
       default: null,
     },
 
+    paidAt: { type: Date, default: null },
+
     x: Number,
     y: Number,
     w: Number,
