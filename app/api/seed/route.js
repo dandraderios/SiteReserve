@@ -20,8 +20,8 @@ export async function GET() {
       status: "available",
       x: 100,
       y: 100,
-      w: 60,
-      h: 40,
+      w: 120,
+      h: 80,
     },
     {
       code: "A2",
@@ -33,10 +33,10 @@ export async function GET() {
       capacity: 4,
       features: ["Cercano a baños", "Sombra natural", "Acceso vehicular"],
       status: "available",
-      x: 200,
+      x: 250,
       y: 100,
-      w: 60,
-      h: 40,
+      w: 120,
+      h: 80,
     },
     {
       code: "A3",
@@ -50,8 +50,8 @@ export async function GET() {
       status: "available",
       x: 100,
       y: 200,
-      w: 60,
-      h: 40,
+      w: 120,
+      h: 80,
     },
   ]);
 

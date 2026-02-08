@@ -65,14 +65,39 @@ export default function CampingMap({
             {/* Código del terreno */}
             <text
               x={site.x + site.w / 2}
-              y={site.y + site.h / 2 + 4}
+              y={site.y + site.h / 2 - 2}
               textAnchor="middle"
-              fontSize="12"
+              fontSize="16"
               fontWeight="bold"
               fill="#ffffff"
               pointerEvents="none"
             >
               {site.code}
+            </text>
+
+            {/* Estado debajo */}
+            <text
+              x={site.x + site.w / 2}
+              y={site.y + site.h / 2 + 12}
+              textAnchor="middle"
+              fontSize="14"
+              fontWeight="600"
+              fill={
+                site.status === "sold"
+                  ? "#ffffff"
+                  : site.status === "reserved"
+                    ? "#ffffff"
+                    : isSelected
+                      ? "#dbeafe"
+                      : "#ecfeff"
+              }
+              pointerEvents="none"
+            >
+              {site.status === "sold"
+                ? "Vendido"
+                : isSelected
+                  ? "Seleccionado"
+                  : "Disponible"}
             </text>
           </g>
         );
